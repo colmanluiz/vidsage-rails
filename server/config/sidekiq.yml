@@ -1,0 +1,16 @@
+development:
+  :queues:
+    - default
+    - video_processing
+  :concurrency: 5
+
+production:
+  :queues:
+    - default
+    - video_processing
+  :concurrency: 10
+
+test:
+  :queues:
+    - default
+  :concurrency: 1

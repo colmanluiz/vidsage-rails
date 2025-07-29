@@ -34,3 +34,5 @@
 # Ignore editor-specific files
 .DS_Store
 *~
+
+/storage

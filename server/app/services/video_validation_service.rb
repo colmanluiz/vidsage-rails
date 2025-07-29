@@ -13,7 +13,6 @@ class VideoValidationService < ApplicationService
   end
 
   def call
-    puts "CHECKPOINTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT VALIDATION SERVICE"
     return false unless basic_validations
     return false unless valid_file_headers?
     return false unless valid_ffprobe?
@@ -27,7 +26,6 @@ class VideoValidationService < ApplicationService
   private
 
   def basic_validations
-    puts "CHECKPOINTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT VALIDATION SERVICE"
     return false unless @video.storage_key.present?
     return false unless File.exist?(@file_path)
     return false unless valid_mime_type?
@@ -41,14 +39,31 @@ class VideoValidationService < ApplicationService
 
   def valid_file_headers?
     File.open(@file_path, 'rb') do |file|
-      magic = file.read(4)
-      # Check for common video file signatures
-      return true if magic.start_with?("\x00\x00\x00\x18ftypmp42") # MP4
-      return true if magic.start_with?("RIFF") # AVI
-      return true if magic.start_with?("\x00\x00\x00\x14ftypqt") # MOV
-      return true if magic.start_with?("\x1A\x45\xDF\xA3") # MKV
+      # Read more bytes to properly identify file types
+      header = file.read(12)
+      return false if header.nil? || header.length < 8
+      
+      puts "File header bytes: #{header[0..11].unpack('C*').map { |b| format('%02X', b) }.join(' ')}"
+      
+      # Check for video file signatures
+      # MP4/MOV: Look for 'ftyp' at offset 4
+      return true if header[4..7] == "ftyp"
+      
+      # AVI: Starts with 'RIFF' and has 'AVI ' at offset 8
+      return true if header[0..3] == "RIFF" && header[8..11] == "AVI "
+      
+      # MKV/WebM: Starts with EBML signature
+      return true if header[0..3] == "\x1A\x45\xDF\xA3"
+      
+      # QuickTime: Alternative signature
+      return true if header[4..7] == "mdat" || header[4..7] == "wide"
+      
+      # 3GP files (mobile video)
+      return true if header[4..6] == "3gp" || header[4..6] == "3g2"
+      
+      puts "No valid video signature found"
+      false
     end
-    false
   rescue => e
     log_error("Error reading file headers", e)
     false
@@ -56,8 +71,6 @@ class VideoValidationService < ApplicationService
 
   def valid_ffprobe?
     command = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 #{Shellwords.escape(@file_path)}"
-    puts "====================================================="
-    puts command
     stdout, stderr, status = Open3.capture3(command)
 
     if status.success? && stderr.empty? && stdout.present?

@@ -6,14 +6,14 @@ class VideoProcessingJob < ApplicationJob
     video = Video.find(video_id)
 
     if VideoValidationService.call(video)
-      puts "CHECKPOINTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT VALIDATION SERVICE"
       VideoConversionService.call(video)
     else
-      puts "CHECKPOINTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT else"
-      video.update(status: :failed)
+      video.update(status: :corrupted)
     end
   rescue ActiveRecord::RecordNotFound => e
     log_error("Video not found", e)
+  rescue => e
+    video&.update(status: :failed)
   end
 
   private
