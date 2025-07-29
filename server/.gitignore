@@ -1,0 +1,36 @@
+# Ignore the default SQLite database.
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# Ignore all logfiles and tempfiles.
+/log/*.log
+/tmp/
+
+# Ignore uploaded files in development.
+/public/uploads/
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*.pid
+
+# Ignore node_modules
+/node_modules/
+
+# Ignore Byebug command history file.
+.byebug_history
+
+# Ignore Rails credentials and master key
+/config/credentials.yml.enc
+/config/master.key
+
+# Ignore database configuration (consider committing a template)
+/config/database.yml
+
+# Ignore precompiled assets
+/public/assets/
+
+# Ignore Bundler's local gem installation
+/vendor/bundle/
+
+# Ignore editor-specific files
+.DS_Store
+*~
